@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- Central friendly math badge rounded square -->
+    <path
+        android:fillColor="#38BDF8"
+        android:pathData="M38,26 h32 c7.7,0 14,6.3 14,14 v32 c0,7.7 -6.3,14 -14,14 h-32 c-7.7,0 -14,-6.3 -14,-14 v-32 c0,-7.7 6.3,-14 14,-14 Z" />
+
+    <!-- Math Badge Inner Face -->
+    <path
+        android:fillColor="#0284C7"
+        android:pathData="M40,30 h28 c5.5,0 10,4.5 10,10 v28 c0,5.5 -4.5,10 -10,10 h-28 c-5.5,0 -10,-4.5 -10,-10 v-28 c0,-5.5 4.5,-10 10,-10 Z" />
+
+    <!-- Big Golden Mascot Star in center -->
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M54,34 L57.5,43 L67,43.5 L59.5,49.5 L62.5,58.5 L54,53 L45.5,58.5 L48.5,49.5 L41,43.5 L50.5,43 Z" />
+
+    <!-- Mascot Happy Eyes & Smile -->
+    <path
+        android:fillColor="#1E293B"
+        android:pathData="M51,46a1.5,1.5 0 1,0 0.01,0 M57,46a1.5,1.5 0 1,0 0.01,0" />
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#1E293B"
+        android:strokeWidth="1.2"
+        android:strokeLineCap="round"
+        android:pathData="M52,50 Q54,52.5 56,50" />
+
+    <!-- Plus sign top left -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M44,66 h6 v2 h-6 v6 h-2 v-6 h-6 v-2 h6 v-6 h2 v6 Z" />
+
+    <!-- Multiplication sign top right -->
+    <path
+        android:fillColor="#F472B6"
+        android:pathData="M66,64 L69,67 L72,64 L73.5,65.5 L70.5,68.5 L73.5,71.5 L72,73 L69,70 L66,73 L64.5,71.5 L67.5,68.5 L64.5,65.5 Z" />
+
+    <!-- Division and Equal dots -->
+    <path
+        android:fillColor="#34D399"
+        android:pathData="M40,36 h4 v1.5 h-4 Z M41.2,34 a0.8,0.8 0 1,1 0,0.01 M41.2,39 a0.8,0.8 0 1,1 0,0.01" />
+
+    <!-- Minus sign -->
+    <path
+        android:fillColor="#FBBF24"
+        android:pathData="M66,35 h6 v2 h-6 Z" />
+</vector>

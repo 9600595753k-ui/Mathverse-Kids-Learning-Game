@@ -1,0 +1,6 @@
+{
+  "name": "MathWhiz Kids",
+  "description": "Interactive and gamified mathematics learning app for elementary school children with offline accessibility, rewards, parent progress tracking, and PDF reports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
