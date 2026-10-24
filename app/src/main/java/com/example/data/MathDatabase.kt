@@ -6,8 +6,13 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 
 @Database(
-    entities = [StudentEntity::class, SessionEntity::class, UnlockedItemEntity::class],
-    version = 1,
+    entities = [
+        StudentEntity::class,
+        SessionEntity::class,
+        UnlockedItemEntity::class,
+        SubscriptionPaymentEntity::class
+    ],
+    version = 2,
     exportSchema = false
 )
 abstract class MathDatabase : RoomDatabase() {

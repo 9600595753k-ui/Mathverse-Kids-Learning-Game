@@ -44,6 +44,7 @@ fun ParentDashboardScreen(
     val context = LocalContext.current
     val student by viewModel.student.collectAsState()
     val sessions by viewModel.sessions.collectAsState()
+    val latestPayment by viewModel.latestPayment.collectAsState()
     val milestones = viewModel.milestones
     val isDark by viewModel.isDarkTheme.collectAsState()
     val language by viewModel.selectedLanguage.collectAsState()
@@ -264,6 +265,54 @@ fun ParentDashboardScreen(
                                 color = if (student.isVerified) Color(0xFF166534) else Color(0xFFB45309),
                                 fontWeight = FontWeight.SemiBold
                             )
+                        }
+                    }
+                }
+            }
+
+            // VIP Membership Banner
+            item {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = if (student.isVip) Color(0xFFDCFCE7) else Color(0xFFFEF3C7),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, if (student.isVip) Color(0xFF86EFAC) else Color(0xFFFDE68A)),
+                    modifier = Modifier.fillMaxWidth().clickable { viewModel.navigateTo(Screen.Subscription) }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(14.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(text = if (student.isVip) "👑" else "⭐", fontSize = 24.sp)
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    text = if (student.isVip) "1-Year VIP Membership Active ✅" else "Upgrade to 1-Year VIP for ₹10",
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp,
+                                    color = if (student.isVip) Color(0xFF166534) else Color(0xFF92400E)
+                                )
+                                Text(
+                                    text = if (student.isVip) {
+                                        val refText = latestPayment?.let { " • Txn: ${it.transactionId}" } ?: ""
+                                        "KIRUBAKARAN. N (IOB)$refText"
+                                    } else "Pay ₹10 via GPay / UPI / QR / Bank Transfer",
+                                    fontSize = 11.sp,
+                                    color = if (student.isVip) Color(0xFF15803D) else Color(0xFFB45309)
+                                )
+                            }
+                        }
+                        Button(
+                            onClick = { viewModel.navigateTo(Screen.Subscription) },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (student.isVip) Color(0xFF166534) else Color(0xFFD97706),
+                                contentColor = Color.White
+                            ),
+                            shape = RoundedCornerShape(10.dp),
+                            contentPadding = PaddingValues(horizontal = 10.dp, vertical = 4.dp)
+                        ) {
+                            Text(if (student.isVip) "Manage" else "Pay ₹10 💳", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }

@@ -151,3 +151,18 @@ data class SchoolUpdate(
     val category: String,
     val urgency: UpdateUrgency
 )
+
+data class SubscriptionPayment(
+    val id: Long = 0L,
+    val studentId: Long = 1L,
+    val transactionId: String,
+    val planTitle: String,
+    val amountInr: String,
+    val paymentMethod: String,
+    val payeeName: String,
+    val payeeAccount: String,
+    val status: String,
+    val timestamp: Long,
+    val expiryTimestamp: Long
+)
+

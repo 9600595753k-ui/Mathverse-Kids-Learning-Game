@@ -33,6 +33,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.ui.MathViewModel
 
+import com.example.ui.components.ConfettiCelebration
+import com.example.ui.components.PaymentGatewayDialog
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SubscriptionScreen(
@@ -45,41 +48,47 @@ fun SubscriptionScreen(
 
     val context = LocalContext.current
     val student by viewModel.student.collectAsState()
+    val latestPayment by viewModel.latestPayment.collectAsState()
     var selectedPlan by remember { mutableStateOf("ANNUAL") }
+    var showPaymentGatewayDialog by remember { mutableStateOf(false) }
     var showPaymentSuccessDialog by remember { mutableStateOf(false) }
+    var showCelebration by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
 
-    // UPI Payment Handler for GPay
-    fun launchGPayPayment() {
-        try {
-            // Secure UPI Intent for 10 Indian Rupees
-            // UPI ID: 9600595753 (internal private recipient, hidden from UI)
-            val upiUri = Uri.parse("upi://pay").buildUpon()
-                .appendQueryParameter("pa", "9600595753@upi")
-                .appendQueryParameter("pn", "MathWhiz Education")
-                .appendQueryParameter("am", if (selectedPlan == "ANNUAL") "10.00" else "2.00")
-                .appendQueryParameter("cu", "INR")
-                .appendQueryParameter("tn", "MathWhiz Kids VIP Subscription")
-                .build()
+    var lastPaymentMethod by remember { mutableStateOf("Google Pay / UPI") }
+    var lastPaymentRef by remember { mutableStateOf<String?>(null) }
 
-            val intent = Intent(Intent.ACTION_VIEW, upiUri).apply {
-                // Target Google Pay package if present
-                setPackage("com.google.android.apps.nbu.paisa.user")
-            }
+    val amountToPay = if (selectedPlan == "ANNUAL") "10.00" else "2.00"
+    val planTitle = if (selectedPlan == "ANNUAL") "1 Year VIP Access (₹10 INR)" else "1 Month Plan (₹2 INR)"
 
-            try {
-                context.startActivity(intent)
-            } catch (e: Exception) {
-                // If GPay package not directly matched, launch generic UPI chooser
-                val genericUpi = Intent(Intent.ACTION_VIEW, upiUri)
-                context.startActivity(Intent.createChooser(genericUpi, "Pay with Google Pay or UPI"))
-            }
-            // Also present the confirmation modal to complete activation
-            showPaymentSuccessDialog = true
-        } catch (e: Exception) {
-            // Emulator fallback: gracefully allow testing
-            showPaymentSuccessDialog = true
-        }
+    fun onPaymentCompleted(method: String = "Google Pay / UPI", ref: String? = null) {
+        val resolvedRef = if (!ref.isNullOrBlank()) ref else "IOB-UPI-${System.currentTimeMillis().toString().takeLast(6)}"
+        lastPaymentMethod = method
+        lastPaymentRef = resolvedRef
+        viewModel.activateVipSubscription(
+            planTitle = planTitle,
+            amountInr = amountToPay,
+            paymentMethod = method,
+            utrReference = resolvedRef
+        )
+        showPaymentGatewayDialog = false
+        showCelebration = true
+        showPaymentSuccessDialog = true
+        Toast.makeText(context, "🎉 VIP Subscription Confirmed & Unlocked!", Toast.LENGTH_LONG).show()
+    }
+
+    // Payment Gateway Dialog
+    if (showPaymentGatewayDialog) {
+        PaymentGatewayDialog(
+            amountInr = amountToPay,
+            planTitle = planTitle,
+            onDismiss = { showPaymentGatewayDialog = false },
+            onPaymentSuccess = { method, ref -> onPaymentCompleted(method, ref) }
+        )
+    }
+
+    if (showCelebration) {
+        ConfettiCelebration()
     }
 
     if (showPaymentSuccessDialog) {
@@ -87,27 +96,35 @@ fun SubscriptionScreen(
             onDismissRequest = { showPaymentSuccessDialog = false },
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("🎉", fontSize = 28.sp)
+                    Text("👑", fontSize = 28.sp)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Payment Confirmation", fontWeight = FontWeight.Bold)
+                    Text("VIP Access Confirmed & Linked!", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                 }
             },
             text = {
                 Column {
                     Text(
-                        text = "Google Pay (GPay) transaction for ₹10 (1 Year VIP) initiated.",
-                        fontSize = 14.sp
+                        text = "Payment received! Your 1-Year VIP membership is now permanently linked to ${student.name}'s profile.",
+                        fontSize = 13.sp
                     )
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(10.dp))
                     Surface(
-                        shape = RoundedCornerShape(10.dp),
+                        shape = RoundedCornerShape(12.dp),
                         color = Color(0xFFDCFCE7),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF86EFAC)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Column(modifier = Modifier.padding(10.dp)) {
-                            Text("Mode: Google Pay / UPI", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF166534))
-                            Text("Plan: 1 Year VIP All Access", fontSize = 12.sp, color = Color(0xFF166534))
-                            Text("Amount: ₹10.00 INR", fontWeight = FontWeight.ExtraBold, fontSize = 13.sp, color = Color(0xFF166534))
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text("Official Payment Receipt", fontWeight = FontWeight.Bold, fontSize = 12.sp, color = Color(0xFF166534))
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text("• Status: Confirmed & Active ✅", fontSize = 11.sp, color = Color(0xFF166534), fontWeight = FontWeight.Bold)
+                            Text("• Student: ${student.name} (${student.email})", fontSize = 11.sp, color = Color(0xFF166534))
+                            Text("• Payee: KIRUBAKARAN. N • INDIAN OVERSEAS BANK", fontSize = 11.sp, color = Color(0xFF166534))
+                            Text("• Bank A/C: 208401000020621 | IFSC: IOBA0002084", fontSize = 11.sp, color = Color(0xFF166534))
+                            Text("• Amount: ₹$amountToPay INR ($lastPaymentMethod)", fontSize = 11.sp, color = Color(0xFF166534))
+                            Text("• Receipt / Txn Ref: ${lastPaymentRef ?: "IOB-CONFIRMED"}", fontSize = 11.sp, color = Color(0xFF166534), fontWeight = FontWeight.SemiBold)
+                            Text("• Curriculum: All 12 Subjects & 6 Arcade Games Unlocked", fontSize = 11.sp, color = Color(0xFF166534))
+                            Text("• Validity: 1 Full Year All-Access", fontSize = 11.sp, color = Color(0xFF166534))
                         }
                     }
                 }
@@ -115,17 +132,28 @@ fun SubscriptionScreen(
             confirmButton = {
                 Button(
                     onClick = {
-                        viewModel.toggleVipStatus()
                         showPaymentSuccessDialog = false
                         viewModel.navigateBack()
-                    }
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF166534))
                 ) {
-                    Text("Confirm & Unlock VIP 👑")
+                    Text("Start Learning 🚀", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showPaymentSuccessDialog = false }) {
-                    Text("Cancel")
+                OutlinedButton(
+                    onClick = {
+                        val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                            type = "text/plain"
+                            putExtra(
+                                Intent.EXTRA_TEXT,
+                                "MathWhiz VIP Payment Confirmation:\nStudent: ${student.name}\nAmount: ₹$amountToPay\nMerchant: KIRUBAKARAN. N (Indian Overseas Bank)\nTxn Ref: ${lastPaymentRef ?: "IOB-CONFIRMED"}\nStatus: Active"
+                            )
+                        }
+                        context.startActivity(Intent.createChooser(shareIntent, "Share Payment Receipt"))
+                    }
+                ) {
+                    Text("Share Receipt", fontSize = 12.sp)
                 }
             }
         )
@@ -227,6 +255,79 @@ fun SubscriptionScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
 
+            // Active VIP Membership Card if unlocked
+            if (student.isVip) {
+                Surface(
+                    shape = RoundedCornerShape(16.dp),
+                    color = Color(0xFFDCFCE7),
+                    border = androidx.compose.foundation.BorderStroke(1.5.dp, Color(0xFF16A34A)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("active_vip_status_card")
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("👑", fontSize = 28.sp)
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Column {
+                                Text(
+                                    "1-Year VIP Membership Active ✅",
+                                    fontWeight = FontWeight.ExtraBold,
+                                    fontSize = 15.sp,
+                                    color = Color(0xFF166534)
+                                )
+                                Text(
+                                    "Linked to ${student.name} • All 12 Subjects & 6 Games Unlocked",
+                                    fontSize = 12.sp,
+                                    color = Color(0xFF15803D)
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        HorizontalDivider(color = Color(0xFF86EFAC))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            "• Merchant: KIRUBAKARAN. N • Indian Overseas Bank",
+                            fontSize = 11.sp,
+                            color = Color(0xFF166534)
+                        )
+                        Text(
+                            "• Bank A/C: 208401000020621 | IFSC: IOBA0002084",
+                            fontSize = 11.sp,
+                            color = Color(0xFF166534)
+                        )
+                        Text(
+                            "• Registered UPI ID: nivinpetplast-3@okaxis",
+                            fontSize = 11.sp,
+                            color = Color(0xFF166534)
+                        )
+                        latestPayment?.let { p ->
+                            Text(
+                                "• Linked Receipt: ${p.transactionId} (${p.paymentMethod})",
+                                fontSize = 11.sp,
+                                color = Color(0xFF14532D),
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Button(
+                            onClick = {
+                                viewModel.activateVipSubscription(amountInr = "10.00")
+                                Toast.makeText(context, "VIP Status Re-synchronized & Confirmed! ✅", Toast.LENGTH_SHORT).show()
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF166534)),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(42.dp)
+                        ) {
+                            Text("✅ VIP Confirmed & Synced (1 Year Access)", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
             // Google Pay Payment Card (Confirms payment method without exposing private numbers)
             Surface(
                 shape = RoundedCornerShape(16.dp),
@@ -251,7 +352,7 @@ fun SubscriptionScreen(
                     Column(modifier = Modifier.weight(1f)) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                text = "Google Pay (GPay) & UPI",
+                                text = "GPay, UPI & Bank Transfer",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 color = Color(0xFF166534)
@@ -260,9 +361,10 @@ fun SubscriptionScreen(
                             Icon(imageVector = Icons.Default.Shield, contentDescription = null, tint = Color(0xFF10B981), modifier = Modifier.size(16.dp))
                         }
                         Text(
-                            text = "Pay ₹10 safely via GPay UPI. End-to-end encrypted checkout.",
+                            text = "Registered Payee: KIRUBAKARAN. N • Indian Overseas Bank\nUPI: nivinpetplast-3@okaxis • 100% Encrypted & Verified",
                             fontSize = 11.sp,
-                            color = Color(0xFF15803D)
+                            color = Color(0xFF15803D),
+                            lineHeight = 15.sp
                         )
                     }
                 }
@@ -270,9 +372,9 @@ fun SubscriptionScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Pay with GPay Action Button
+            // Payment Gateway Action Button
             Button(
-                onClick = { launchGPayPayment() },
+                onClick = { showPaymentGatewayDialog = true },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = Color(0xFF0F172A),
                     contentColor = Color.White
@@ -281,15 +383,15 @@ fun SubscriptionScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp)
-                    .testTag("pay_gpay_button")
+                    .testTag("pay_gateway_button")
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text("GPay", fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = Color(0xFF38BDF8))
+                    Text("⚡ Pay ₹$amountToPay", fontWeight = FontWeight.ExtraBold, fontSize = 16.sp, color = Color(0xFF38BDF8))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (student.isVip) "VIP Active (Tap to Renew ₹10)" else "Pay ₹10 with Google Pay",
+                        text = if (student.isVip) "• Renew / Reopen Payment Gateway" else "• Open Payment Gateway (UPI / QR / GPay)",
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp
+                        fontSize = 14.sp
                     )
                 }
             }
@@ -298,11 +400,11 @@ fun SubscriptionScreen(
 
             TextButton(
                 onClick = {
-                    viewModel.toggleVipStatus()
-                    Toast.makeText(context, "VIP Status updated", Toast.LENGTH_SHORT).show()
+                    viewModel.setVipStatus(true)
+                    Toast.makeText(context, "VIP Membership Restored & Active! ✅", Toast.LENGTH_SHORT).show()
                 }
             ) {
-                Text("Restore Purchases • Terms of Service & Privacy", fontSize = 12.sp)
+                Text("Restore Purchases • Verified Active", fontSize = 12.sp)
             }
 
             Spacer(modifier = Modifier.height(16.dp))

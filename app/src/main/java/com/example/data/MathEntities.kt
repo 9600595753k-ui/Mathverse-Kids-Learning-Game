@@ -40,3 +40,19 @@ data class UnlockedItemEntity(
     val studentId: Long,
     val itemId: String
 )
+
+@Entity(tableName = "subscription_payments")
+data class SubscriptionPaymentEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0L,
+    val studentId: Long,
+    val transactionId: String,
+    val planTitle: String,
+    val amountInr: String,
+    val paymentMethod: String,
+    val payeeName: String,
+    val payeeAccount: String,
+    val status: String,
+    val timestamp: Long,
+    val expiryTimestamp: Long
+)
+

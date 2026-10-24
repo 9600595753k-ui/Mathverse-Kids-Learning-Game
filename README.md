@@ -41,8 +41,9 @@ Every push automatically builds the newest APK using GitHub Actions:
 - **🔒 Parental Controls & Analytics:**
   - PIN gate (`1234`), student profile switcher, and daily screen time limit settings.
   - One-tap native PDF progress report generation, system printing, and WhatsApp sharing.
-- **👑 VIP Subscription via Google Pay (GPay):**
-  - 1-Year VIP for ₹10 INR via Google Pay / UPI.
+- **👑 VIP Subscription Payment Gateway:**
+  - 1-Year VIP for ₹10 INR via Google Pay, PhonePe, Paytm, QR Code, or Direct Bank Transfer (IMPS/NEFT).
+  - Official Registered Merchant: **KIRUBAKARAN. N** • **INDIAN OVERSEAS BANK** (A/C: `208401000020621`, IFSC: `IOBA0002084`, UPI: `nivinpetplast-3@okaxis`).
 - **🌐 Offline-First & Multi-Language:**
   - Full Room Database persistence.
   - Multi-language support (English, Spanish, French, German, Hindi, Tamil).

@@ -8,6 +8,7 @@ import com.example.data.MathDatabase
 import com.example.data.MathLessonBank
 import com.example.data.MathRepository
 import com.example.data.PdfReportHelper
+import com.example.data.SubscriptionPaymentEntity
 import com.example.model.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -68,6 +69,9 @@ class MathViewModel(application: Application) : AndroidViewModel(application) {
 
     val unlockedItemIds: StateFlow<List<String>> = repository.unlockedItemsFlow
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), listOf("wizard_hat", "nerd_glasses"))
+
+    val latestPayment: StateFlow<SubscriptionPayment?> = repository.latestPaymentFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     // Navigation and UI state
     private val _currentScreen = MutableStateFlow<Screen>(Screen.Home)
@@ -357,6 +361,41 @@ class MathViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             val currentVip = student.value.isVip
             repository.setVipStatus(student.value.id, !currentVip)
+        }
+    }
+
+    fun setVipStatus(isVip: Boolean) {
+        viewModelScope.launch {
+            repository.setVipStatus(student.value.id, isVip)
+        }
+    }
+
+    fun activateVipSubscription(
+        planTitle: String = "1 Year VIP Full Access",
+        amountInr: String = "10.00",
+        paymentMethod: String = "Google Pay (GPay) / UPI",
+        utrReference: String? = null
+    ) {
+        viewModelScope.launch {
+            val studentId = student.value.id
+            val ref = if (!utrReference.isNullOrBlank()) {
+                utrReference.trim()
+            } else {
+                "IOB-UPI-${System.currentTimeMillis().toString().takeLast(6)}"
+            }
+            val payment = SubscriptionPaymentEntity(
+                studentId = studentId,
+                transactionId = ref,
+                planTitle = planTitle,
+                amountInr = amountInr,
+                paymentMethod = paymentMethod,
+                payeeName = "KIRUBAKARAN. N",
+                payeeAccount = "INDIAN OVERSEAS BANK (208401000020621)",
+                status = "CONFIRMED_ACTIVE",
+                timestamp = System.currentTimeMillis(),
+                expiryTimestamp = System.currentTimeMillis() + 365L * 24 * 60 * 60 * 1000
+            )
+            repository.recordPayment(payment)
         }
     }
 

@@ -45,6 +45,24 @@ class MathRepository(private val mathDao: MathDao) {
 
     val unlockedItemsFlow: Flow<List<String>> = mathDao.getUnlockedItemIds(1L)
 
+    val latestPaymentFlow: Flow<SubscriptionPayment?> = mathDao.getPaymentsForStudent(1L).map { list ->
+        list.firstOrNull()?.let {
+            SubscriptionPayment(
+                id = it.id,
+                studentId = it.studentId,
+                transactionId = it.transactionId,
+                planTitle = it.planTitle,
+                amountInr = it.amountInr,
+                paymentMethod = it.paymentMethod,
+                payeeName = it.payeeName,
+                payeeAccount = it.payeeAccount,
+                status = it.status,
+                timestamp = it.timestamp,
+                expiryTimestamp = it.expiryTimestamp
+            )
+        }
+    }
+
     suspend fun ensureInitialData() {
         val existing = mathDao.getStudentById(1L)
         if (existing == null) {
@@ -189,6 +207,28 @@ class MathRepository(private val mathDao: MathDao) {
 
     suspend fun setVipStatus(studentId: Long, isVip: Boolean) {
         mathDao.updateVipStatus(studentId, isVip)
+    }
+
+    suspend fun recordPayment(payment: SubscriptionPaymentEntity) {
+        mathDao.insertPayment(payment)
+        mathDao.updateVipStatus(payment.studentId, true)
+    }
+
+    suspend fun getLatestPayment(studentId: Long): SubscriptionPayment? {
+        val it = mathDao.getLatestPayment(studentId) ?: return null
+        return SubscriptionPayment(
+            id = it.id,
+            studentId = it.studentId,
+            transactionId = it.transactionId,
+            planTitle = it.planTitle,
+            amountInr = it.amountInr,
+            paymentMethod = it.paymentMethod,
+            payeeName = it.payeeName,
+            payeeAccount = it.payeeAccount,
+            status = it.status,
+            timestamp = it.timestamp,
+            expiryTimestamp = it.expiryTimestamp
+        )
     }
 
     suspend fun verifyEmail(studentId: Long) {

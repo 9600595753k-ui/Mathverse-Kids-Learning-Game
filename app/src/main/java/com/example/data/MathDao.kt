@@ -45,4 +45,14 @@ interface MathDao {
 
     @Query("SELECT itemId FROM unlocked_items WHERE studentId = :studentId")
     suspend fun getUnlockedItemIdsList(studentId: Long): List<String>
+
+    // Subscription Payments
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertPayment(payment: SubscriptionPaymentEntity): Long
+
+    @Query("SELECT * FROM subscription_payments WHERE studentId = :studentId ORDER BY timestamp DESC")
+    fun getPaymentsForStudent(studentId: Long): Flow<List<SubscriptionPaymentEntity>>
+
+    @Query("SELECT * FROM subscription_payments WHERE studentId = :studentId ORDER BY timestamp DESC LIMIT 1")
+    suspend fun getLatestPayment(studentId: Long): SubscriptionPaymentEntity?
 }
